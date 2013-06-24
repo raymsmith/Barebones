@@ -17,7 +17,7 @@ class AzaleaSessions
     {
         if( $strategy == NULL)
             //self::$strategy = new FileSessions();
-            self::$strategy = new Database_Sessions("loc.dbsess.azaleahealth.com","web_app","azweb2010");
+            self::$strategy = new Database_Sessions("ip","user","passwd");
         else
             self::$strategy = $strategy;
     }
