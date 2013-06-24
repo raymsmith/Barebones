@@ -10,32 +10,12 @@ class ApplicationDataConnectionPool
         ApplicationDataConnectionPool::$connections = array();
         ApplicationDataConnectionPool::$connections['static'] = function(){
 			require_once(LIBPATH."mysql_database.class.php");
-			$db = new ApplicationDatabase(new MysqlDatabase("loc.dbdev.azaleahealth.com","web_app","azweb2010"));
+			$db = new ApplicationDatabase(new MysqlDatabase("staticdb.ip","username","passwd"));
 			return $db;
         };
         ApplicationDataConnectionPool::$connections['session'] = function(){
 			require_once(LIBPATH."mysql_database.class.php");
-			$db = new ApplicationDatabase(new MysqlDatabase("loc.dbsess.azaleahealth.com","web_app","azweb2010"));
-			return $db;
-        };
-        ApplicationDataConnectionPool::$connections['common'] = function(){
-			require_once(LIBPATH."mysql_database.class.php");
-			$db = new ApplicationDatabase(new MysqlDatabase("loc.dbdev.azaleahealth.com","web_app","azweb2010"));
-			return $db;
-        };
-        ApplicationDataConnectionPool::$connections['customer'] = function(){
-			require_once(LIBPATH."mysql_database.class.php");
-			$db = new ApplicationDatabase(new MysqlDatabase("loc.dbdev.azaleahealth.com","web_app","azweb2010"));
-			return $db;
-			/*
-			$db_type = CUSTOMER_DATABASE_TYPE;
-			$db = new ApplicationDatabase(new $db_type(CUSTOMER_DATABASE_IP,CUSTOMER_DATABASE_USER,CUSTOMER_DATABASE_PASSWD));
-			return $db;
-			*/
-        };
-        ApplicationDataConnectionPool::$connections['test'] = function(){
-			require_once(LIBPATH."mysql_database.class.php");
-			$db = new ApplicationDatabase(new MysqlDatabase("loc.dbtest.azaleahealth.com","web_app","azweb2010"));
+			$db = new ApplicationDatabase(new MysqlDatabase("sessiondb.ip","username","passwd"));
 			return $db;
         };
 	}
