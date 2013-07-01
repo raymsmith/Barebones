@@ -1,0 +1,11 @@
+To run the unit all tests execute this command
+phpunit --colors --verbose --bootstrap ../config/test_config.php .
+
+To run individual tests 
+phpunit --colors --verbose --bootstrap ../config/test_config.php <file>
+
+Minimal Output 
+phpunit --testdox --stop-on-failure --bootstrap ../config/test_config.php .
+
+Generate HTML Docs
+phpunit --coverage-html ./reports/ --bootstrap ../config/test_config.php .
