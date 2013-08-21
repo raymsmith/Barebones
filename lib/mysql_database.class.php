@@ -1,4 +1,5 @@
 <?php
+namespace BarebonesPHP;
 require_once(LIBPATH.'mysql_result.class.php');
 class MysqlDatabase extends Database
 {

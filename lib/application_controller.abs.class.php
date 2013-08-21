@@ -1,4 +1,5 @@
 <?php
+namespace BarebonesPHP;
 abstract class ApplicationController{
 	public function send_success($options=""){
 		$retval = array("success"=>"1");

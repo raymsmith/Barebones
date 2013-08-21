@@ -1,5 +1,6 @@
 <?php
-abstract class DatabaseResult implements Iterator
+namespace BarebonesPHP;
+abstract class DatabaseResult implements \Iterator
 {
     private $current_pos;
     private $row_count;

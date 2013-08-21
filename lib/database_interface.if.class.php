@@ -1,4 +1,5 @@
 <?php
+namespace BarebonesPHP;
 interface DatabaseInterface
 {
     public function connect();

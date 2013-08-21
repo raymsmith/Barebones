@@ -1,4 +1,5 @@
 <?php
+namespace BarebonesPHP;
 interface SessionInterface
 {
     public function open($save_path,$session_name);

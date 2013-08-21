@@ -1,4 +1,5 @@
 <?php
+namespace BarebonesPHP;
 class ApplicationDataConnectionPool
 {
     protected static $connections;
@@ -26,7 +27,6 @@ class ApplicationDataConnectionPool
 			ApplicationDataConnectionPool::set($name, $connections[$name]());
 		}
 		return ApplicationDataConnectionPool::$pool[$name];
-        //return ( isset($this->pool[$name]))?$this->pool[$name]:$this->connections[$name]();
     }
     public static function set($name,$value)
     {

@@ -1,20 +1,24 @@
 <?php
-abstract class Model extends Schema{
+use BarebonesPHP as Barebones;
+abstract class Model extends Barebones\Schema{
 	protected $connection;
 	protected $database;
 	protected $db;
-	protected $attributes;
+	protected $attributes = array();
 	protected $primary_key;
 	protected $id;
 	protected $rules;
+	protected $loaded;
+	protected $class_methods = array();
     public function __construct($connection,$table,$id=""){
         $this->connection = $connection;
-        $this->db = ( $this->connection == 'common' )?'common':"_".$_SESSION['usr_cur_customer_id'];
+        $this->db = $connection;
         $this->table = $table;
         $this->attributes = array();
         $this->loadSchema();
 		$this->id = $id;
 		$this->rules = array();
+		$this->class_methods = get_class_methods($this);
         //try{
 			//$this->loadSchema();
 			if( $this->validId($id) ){
@@ -64,7 +68,7 @@ abstract class Model extends Schema{
 	}
 
 	private function load($id){
-		$db = ApplicationDataConnectionPool::get($this->connection);
+		$db = Barebones\ApplicationDataConnectionPool::get($this->connection);
 		$sql = "SELECT * FROM `".$this->db."`.`".$this->table."` WHERE `".$this->pri."` = '".$id."' LIMIT 1;";
 		$res = $db->query($sql);
 		if( $db->get_error() != "" )
@@ -81,6 +85,7 @@ abstract class Model extends Schema{
 				$this->attributes[$col] = array($this->_getValue($col,$val),0);
 			}
 		}
+		$this->loaded = true;
 	}
 	private function stub(){
 		foreach($this->schema as $col => $val){
@@ -116,7 +121,9 @@ abstract class Model extends Schema{
 	}
 
 	private function update(){
-		$db = ApplicationDataConnectionPool::get($this->connection);
+		if( !$this->loaded )
+			throw new Exception(get_class($this)." Failed to update: Model not Loaded");
+		$db = Barebones\ApplicationDataConnectionPool::get($this->connection);
 		$update = array();
 		foreach($this->attributes as $key => $arr)
 		{
@@ -137,7 +144,7 @@ abstract class Model extends Schema{
 		}
 	}
 	private function insert(){
-		$db = ApplicationDataConnectionPool::get($this->connection);
+		$db = Barebones\ApplicationDataConnectionPool::get($this->connection);
         $changes = $this->whatChanged();
         if( isset($changes[$this->pri]) )
             unset($changes[$this->pri]);
@@ -168,6 +175,23 @@ abstract class Model extends Schema{
 					$row = $res->next();
 					$this->attributes[$this->pri] = array($this->_getValue($this->pri,$row[$this->pri]),0);
 			}
+			$this->loaded;
+		}
+	}
+	public function delete(){
+		if( !$this->loaded )
+			throw new Exception(get_class($this)." Failed to update: Model not Loaded");
+		if( $this->delete_method != "DELETE"){
+			$disabled_col = $this->delete_method;
+			$this->$disabled_col = 1;
+			$this->update();
+		}
+		else{
+			$db = Barebones\ApplicationDataConnectionPool::get($this->connection);
+			$sql = "DELETE FROM `".$this->db."`.`".$this->table."`  WHERE `".$this->pri."` = '".$this->id."' LIMIT 1;";
+			$res = $db->query($sql);
+			if( $db->get_error() != "" )
+				throw new Exception(get_class($this)." Failed to update: ".$db->get_error()."".$sql);
 		}
 	}
 	public function setRule($field,$rules){
@@ -200,14 +224,16 @@ abstract class Model extends Schema{
 						$rule = substr($rule,1);
 					}
 				}
-				if( function_exists($rule) ){
-					if( !$rule($this->$field) ){
-						throw new Exception(get_class($this)." Failed to validate: ".$rule." is not true for ".$key. " = " . $this->$field );
-					}
-				}
-				else if( method_exists($this,$rule) ){
+				// if( in_array($rule, $this->class_methods) ){
+				if( method_exists($this,$rule) ){
 					if( !$this->$rule($this->$field) ){
-						throw new Exception(get_class($this)." Failed to validate: ".$rule." is not true for ".$this->$field );
+						throw new Exception(get_class($this)." Failed to validate user defined rule: ".$rule." is not true for ".$key." = ".$this->$field.";" );
+					}
+				}				
+				else if( function_exists($rule) ){
+					if( !$rule($this->$field) ){
+						print_r($this->class_methods);
+						throw new Exception(get_class($this)." Failed to validate: ".$rule." is not true for ".$key. " = " . $this->$field.";" );
 					}
 				}
 				else{
@@ -225,6 +251,9 @@ abstract class Model extends Schema{
 				$changed[$key] = $arr[0];
 		}
 		return $changed;
+	}
+	private function isLoaded(){
+		return $this->loaded;
 	}
 	public function __get($key){
 		if(array_key_exists($key,  $this->attributes))
@@ -249,8 +278,16 @@ abstract class Model extends Schema{
 	protected function is_char($val){
 		return preg_match('/^[a-zA-Z]{1}$/',$val);
 	}
-	protected function is_interger($val){
+	protected function is_integer($val){
+		// Warning this only matched positive intergers
+		return true;
 		return preg_match('/^[0-9]{1,}$/',$val);
 	}
+	protected function is_required($val){
+		return !empty($val);
+	}
+	protected function is_currency($val){
+		return preg_match('/^\d+\.\d\d$/',$val);;
+	}	
 }
 ?>

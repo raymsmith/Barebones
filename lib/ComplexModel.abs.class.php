@@ -45,7 +45,6 @@ abstract class ComplexModel extends Model{
 		return $this->models[$idx];
 	}
 	public function save(){
-		//Coming Soon!
 		$this->base_model->save();
 		foreach($this->models as $model){
 			$model->save();

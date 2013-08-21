@@ -1,8 +1,8 @@
 <?php
+namespace BarebonesPHP;
 class Request{
 
 	public static $data = array();
-	public static $ahis;
 	public static $request_uri;
 	public static $uri_segments;
 	public static $isValid = false;
@@ -33,8 +33,6 @@ class Request{
 	private static function validate(){
 		if(empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] == 'off'){
 			self::sendError("No SSL connection detected. Please use HTTPS.");
-		}else if(!isset(self::$ahis)){
-			self::sendError("Session Info missing");
 		}else{
 			self::$isValid = true;
 		}
@@ -47,20 +45,15 @@ class Request{
 		self::$requestMethod = $_SERVER['REQUEST_METHOD'];
 
 		switch($_SERVER['REQUEST_METHOD']){
+
 			case "GET":
 				self::$data = $_GET;
-				self::$data['id'] = end(self::$uri_segments);
-				self::$ahis = self::$data['ahis'];
 				break;
 			case "POST":
 				self::$data = $_POST;
-				self::$data['id'] = (int)end(self::$uri_segments);
-				self::$ahis = self::$data['ahis'];
-
 				break;
 			case "PUT":
 				self::$data = json_decode(file_get_contents("php://input"), true);
-				self::$ahis = self::$data['ahis'];
 				break;
 			case "DELETE":
 				self::$data = $_GET; // Need to see where the data for a DELETE comes from
@@ -78,7 +71,6 @@ class Request{
 				self::$data[substr($variable,1)] = self::$uri_segments[$i];
 			}
 		}
-		//die("Got it! <br />".$path."<br />".self::$request_uri."<br />".var_dump(self::$data));
 	}
 
 	private static function setRequestURI(){
@@ -95,15 +87,6 @@ class Request{
 		self::$module = self::$uri_segments[1];
 		array_shift(self::$uri_segments);
 		self::$request_uri = implode("/", self::$uri_segments);
-	}
-
-	private static function setSessionID(){
-		// print_r($_SERVER);
-		// $referrer = explode("?", $_SERVER['HTTP_REFERER']);
-		// $referrer = explode("&", $referrer[1]);
-		// $referrer = explode("=", $referrer[0]);
-		// self::$ahis = $referrer[1];
-		//print_r($_GET);
 	}
 
 	private static function sendError ($message){

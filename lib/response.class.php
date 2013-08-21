@@ -1,4 +1,5 @@
 <?php
+namespace BarebonesPHP;
 class Response{
 	protected static $body = array();
     protected static $sendHeaders = true;
@@ -58,5 +59,3 @@ class Response{
 
 }
 ?>
-
-
