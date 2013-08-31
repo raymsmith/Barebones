@@ -1,4 +1,4 @@
-Barebones
+BarebonesPHP
 =========
 
 Simple, efficient, effective, and lightweight PHP framework. Just drop in an start coding. Framework provides simple Models and Controllers but no Views, the assumption being that the framework is used in conjuction with a Javascript frontend of some sort.
