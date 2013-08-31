@@ -7,7 +7,7 @@ if( file_exists(__DIR__."/web.config.php") )
 	require_once(__DIR__."/web.config.php");
 
 if( !defined('SYSDIR') )
-	define("SYSDIR","barebones");
+	define("SYSDIR","BarebonesPHP");
 if( !defined('BASEPATH') )
     define('BASEPATH',str_replace(SYSDIR."/config","",__DIR__));
 if( !defined('LIBPATH') )
