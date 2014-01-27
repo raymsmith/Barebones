@@ -1,13 +1,19 @@
 <?php
-namespace BarebonesPHP;
+namespace Barebones\Lib;
 require_once(LIBPATH."request.class.php");
-require_once(LIBPATH."permission.class.php");
-
+require_once(LIBPATH."Permissions.class.php");
 $request = Request::getInstance();
+
+/*
+if ($request::$isValid == true) {
+	ApplicationSessions::setStrategy();
+	ApplicationSessions::load($request::$ahis);
+}
+
 
 //load user permissions
 Permissions::load();
-
+*/
 
 if( !file_exists(BASEPATH.SYSDIR."/routes/".$request::$version."/".$request::$module.".php") ){
 	Response::setBody(array("success"=>"0","error"=>"Invalid Module ".php_uname('n')." ".BASEPATH.'routes/'.$request::$version.'/'.$request::$module.".php"));
@@ -16,11 +22,6 @@ if( !file_exists(BASEPATH.SYSDIR."/routes/".$request::$version."/".$request::$mo
 else
 	require_once(BASEPATH.SYSDIR."/routes/".$request::$version."/".$request::$module.".php");
 
-
-if( !isset($routes[$request::$requestMethod]) ){
-	Response::setBody(array("success"=>"0","error"=>"Invalid Request ".php_uname('n')." ".$request::$request_uri));
-	Response::send_400();
-}
 
 $router = new Router($routes);
 if( $router->findRoute($request::$request_uri) ){
@@ -37,6 +38,7 @@ if( $router->findRoute($request::$request_uri) ){
                 $path = str_replace($match,constant($variable),$path);
         }
     }
+
     $display = array("\n"=>"<br />","\t"=>"&nbsp;");
 	$request::getUrlData($router->pattern);
     require_once($path);

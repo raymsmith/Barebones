@@ -1,5 +1,5 @@
 <?php
-namespace BarebonesPHP;
+namespace Barebones\Lib;
 require_once(LIBPATH."abstract_session.abs.class.php");
 class Database_Sessions extends AbstractSession
 {
@@ -12,7 +12,7 @@ class Database_Sessions extends AbstractSession
 		$this->session_lifetime = ( is_numeric($lifetime) )?$lifetime:60*60;
         $this->db_connection = mysql_connect( $host, $user, $pass, false, MYSQL_CLIENT_COMPRESS );
         if( $this->db_connection === false )
-            mail("rsmith@azaleahealth.com","Session Error",mysql_error($this->db_connection));
+            mail(ADMIN_EMAIL,"Session Error",mysql_error($this->db_connection));
 
         $this->session_id = "";
     }
@@ -38,8 +38,8 @@ class Database_Sessions extends AbstractSession
 		if ( mysql_error($this->db_connection) != "" || mysql_num_rows($session_res) == 0  )
 		{
             if( mysql_error($this->db_connection) != "")
-            	// Handle error
-	    $this->__release_lock($this->session_id);
+                mail(ADMIN_EMAIL,"Session Error","Read Failed:\nSession ID:".$this->session_id."\n".mysql_error($this->db_connection));
+            $this->__release_lock($this->session_id);
 			return '';
         }
         //$this->__release_lock($session_id);
@@ -72,6 +72,7 @@ class Database_Sessions extends AbstractSession
         if( mysql_error($this->db_connection) != "" )
         {
 			$this->__release_lock($this->session_id);
+            mail(ADMIN_EMAIL,"Session Error","Write Failed:\nSession ID:".$this->session_id."\n".mysql_error($this->db_connection));
             die(mysql_error($this->db_connection)."\n".$session_sql."\n");
         }
         if( mysql_num_rows($res) == 0 )
@@ -88,6 +89,7 @@ class Database_Sessions extends AbstractSession
         $session_res = mysql_query($session_sql,$this->db_connection);
         if( mysql_error($this->db_connection) != "" )
         {
+            mail(ADMIN_EMAIL,"Session Error","Write Failed:\nSession ID:".$this->session_id."\n".mysql_error($this->db_connection));
             $retval = false;
         }
         else
@@ -103,8 +105,8 @@ class Database_Sessions extends AbstractSession
 		$session_sql = "DELETE FROM `".$this->db_name."`.`".$this->table."` WHERE `session_id`='".$this->session_id."';";
 		$res = mysql_query($session_sql,$this->db_connection);
 		if( mysql_error($this->db_connection) != "" )
-        		//handle error
-	$this->__release_lock($this->session_id);
+			mail(ADMIN_EMAIL,"Session Error","Destroy Failed:\nSession ID:".$this->session_id."\n".mysql_error($this->db_connection));
+        $this->__release_lock($this->session_id);
     }
     public function gc($max_lifetime="")
     {
@@ -140,12 +142,22 @@ class Database_Sessions extends AbstractSession
         $sql = "SELECT GET_LOCK('".$session_id."', 920) AS `locked`;";
 		$res = mysql_query($sql,$this->db_connection);
 		if( mysql_error($this->db_connection) != "" )
-			//Handle error
+			mail(ADMIN_EMAIL,"Session Error","Acquire Lock Failed:\nSession ID:".$this->session_id."\n".mysql_error($this->db_connection));
 		$lock = mysql_fetch_assoc($res);
 		if (!$lock['locked'])
 		{
             $msg = "Failed to Get Lock After 20 seconds:\nSession ID:".$this->session_id."\n".mysql_error($this->db_connection)."\nServer:".php_uname("n")."";
-			echo $msg;
+            if( isset($_SESSION['usr_cur_client_name']) )
+                $msg .= "\nClient:".$_SESSION['usr_cur_client_name'];
+            if( isset($_SESSION['usr_id']) )
+            {
+                $msg .= "\nUser:".$_SESSION['usr_id'];
+                if( isset($_SESSION['usr_fname']) )
+                    $msg .= "".$_SESSION['usr_fname'];
+                if( isset($_SESSION['usr_lname']) )
+                    $msg .= " ".$_SESSION['usr_lname'];
+            }
+            mail(ADMIN_EMAIL,"Session Error",$msg);
 			return false;
 		}
         else

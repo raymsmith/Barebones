@@ -1,5 +1,5 @@
 <?php
-namespace BarebonesPHP;
+namespace Barebones\Lib;
 class MysqlResult extends DatabaseResult
 {
     private $current_pos;
@@ -43,11 +43,11 @@ class MysqlResult extends DatabaseResult
         return $this->valid();
     }
     public function fetchAll(){
-		$data = array();
-		while($this->hasNext()){
-			$data[] = $this->next();
-		}
-		return $data;
-	}
+        $data = array();
+        while($this->hasNext()){
+            $data[] = $this->next();
+        }
+        return $data;
+    }
 }
 ?>

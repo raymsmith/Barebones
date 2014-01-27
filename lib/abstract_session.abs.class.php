@@ -1,5 +1,5 @@
 <?php
-namespace BarebonesPHP;
+namespace Barebones\Lib;
 require_once(LIBPATH."session_interface.if.class.php");
 abstract class AbstractSession implements SessionInterface
 {

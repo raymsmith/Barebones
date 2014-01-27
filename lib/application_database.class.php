@@ -1,5 +1,5 @@
 <?php
-namespace BarebonesPHP;
+namespace Barebones\Lib;
 class ApplicationDatabase
 {
     private $strategy;

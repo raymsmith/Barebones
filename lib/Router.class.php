@@ -1,5 +1,5 @@
-<?
-namespace BarebonesPHP;
+<?php
+namespace Barebones\Lib;
 class Router{
     private $route;
     private $routes;
@@ -12,9 +12,12 @@ class Router{
         $valid = false;
         $active_controller = "";
         $request = Request::getInstance();
-        $routes_data = $this->routes[$request::$requestMethod];
+		$routes_data = array();
 		if( isset($this->routes['ANY']) ){
 			$routes_data = array_merge_recursive($routes_data,$this->routes['ANY']);
+		}
+		if(isset($this->routes[$request::$requestMethod])){
+			$routes_data = array_merge_recursive($routes_data,$this->routes[$request::$requestMethod]);
 		}
 		$msg = "";
         foreach($routes_data as $route){

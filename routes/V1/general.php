@@ -17,10 +17,4 @@ $routes['GET'][] = array(
    "pattern"=>"@^general/common/2/:alphanumeric$@",
    "method"=>"get"
 );
-$routes['GET'][] = array(
-   "name"=>"PermissionsAPI",
-   "path"=>"{APIPATH}timeme/api/permissions_api.class.php",
-   "pattern"=>"@^lh/myrna/general/permissions/[0-9a-zA-Z_]{1,}$@",
-   "method"=>"get"
-);
 ?>

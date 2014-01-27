@@ -1,5 +1,5 @@
 <?php
-namespace BarebonesPHP;
+namespace Barebones\Lib;
 abstract class DatabaseResult implements \Iterator
 {
     private $current_pos;

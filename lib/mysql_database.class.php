@@ -1,5 +1,5 @@
 <?php
-namespace BarebonesPHP;
+namespace Barebones\Lib;
 require_once(LIBPATH.'mysql_result.class.php');
 class MysqlDatabase extends Database
 {
@@ -21,16 +21,18 @@ class MysqlDatabase extends Database
     public function query($query)
     {
 		$res = mysqli_query($this->connection,$query);
-		
-		if( $this->get_error() != "" )
+
+		if( $this->get_error() != "" ){
+            throw new \Exception("MySQL Error: ".$this->get_error()."\nQUERY:". $query);
 			return false;
+        }
         return new MysqlResult($res);
     }
     public function get_error()
     {
         return mysqli_error($this->connection);
     }
-	
+
     public function escape($query)
     {
         return $this->connection->real_escape_string($query);

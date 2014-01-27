@@ -1,5 +1,5 @@
 <?php
-namespace BarebonesPHP;
+namespace Barebones\Lib;
 require_once(LIBPATH."abstract_session.abs.class.php");
 class FileSessions extends AbstractSession
 {

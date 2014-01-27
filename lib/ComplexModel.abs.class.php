@@ -1,4 +1,5 @@
 <?php
+namespace Barebones\Lib;
 require_once(LIBPATH."CollectionModel.class.php");
 abstract class ComplexModel extends Model{
 	protected $base_model;
@@ -45,6 +46,7 @@ abstract class ComplexModel extends Model{
 		return $this->models[$idx];
 	}
 	public function save(){
+		//Coming Soon!
 		$this->base_model->save();
 		foreach($this->models as $model){
 			$model->save();

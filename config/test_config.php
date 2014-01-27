@@ -1,4 +1,5 @@
 <?php
+
 error_reporting(E_ALL);
 ini_set('display_errors','On');
 
@@ -25,5 +26,5 @@ if( !defined('MODELPATH') )
 require_once("autoloader.php");
 
 // Initialize ApplicationDataConnectionPool
-ApplicationDataConnectionPool::init();
+Barebones\Lib\ApplicationDataConnectionPool::init();
 ?>

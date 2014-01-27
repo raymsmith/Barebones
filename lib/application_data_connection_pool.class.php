@@ -1,22 +1,18 @@
 <?php
-namespace BarebonesPHP;
+namespace Barebones\Lib;
 class ApplicationDataConnectionPool
 {
     protected static $connections;
     protected static $pool;
+    protected static $default = ""; // Name of default database
     public static function init(){
         //Establish Pool
         ApplicationDataConnectionPool::$pool = array();
         //Create connections collection
         ApplicationDataConnectionPool::$connections = array();
-        ApplicationDataConnectionPool::$connections['static'] = function(){
+        ApplicationDataConnectionPool::$connections['connection_name'] = function(){
 			require_once(LIBPATH."mysql_database.class.php");
-			$db = new ApplicationDatabase(new MysqlDatabase("staticdb.ip","username","passwd"));
-			return $db;
-        };
-        ApplicationDataConnectionPool::$connections['session'] = function(){
-			require_once(LIBPATH."mysql_database.class.php");
-			$db = new ApplicationDatabase(new MysqlDatabase("sessiondb.ip","username","passwd"));
+			$db = new ApplicationDatabase(new MysqlDatabase("ip","user","passwd"));
 			return $db;
         };
 	}
@@ -31,6 +27,9 @@ class ApplicationDataConnectionPool
     public static function set($name,$value)
     {
         ApplicationDataConnectionPool::$pool[$name] = $value;
+    }
+    public static function getDefaultConnection(){
+    	return ApplicationDataConnectionPool::get(self::$default);
     }
 }
 ?>

@@ -1,6 +1,6 @@
 <?php
-use BarebonesPHP as Barebones;
-abstract class Model extends Barebones\Schema{
+namespace Barebones\Lib;
+abstract class Model extends Schema{
 	protected $connection;
 	protected $database;
 	protected $db;
@@ -10,25 +10,23 @@ abstract class Model extends Barebones\Schema{
 	protected $rules;
 	protected $loaded;
 	protected $class_methods = array();
+	protected $table;
+	protected $blacklistKeys = array();
     public function __construct($connection,$table,$id=""){
         $this->connection = $connection;
         $this->db = $connection;
         $this->table = $table;
         $this->attributes = array();
+        $this->name_space = $this->db;
         $this->loadSchema();
 		$this->id = $id;
 		$this->rules = array();
 		$this->class_methods = get_class_methods($this);
-        //try{
-			//$this->loadSchema();
-			if( $this->validId($id) ){
-				$this->load($id);
-			}
-			else
-				$this->stub();
-		//} catch(Exception $e){
-			//trigger_error($e->getMessage(),E_USER_ERROR);
-		//}
+        if( $this->validId($id) ){
+            $this->load($id);
+        }
+        else
+            $this->stub();
 	}
 
 	public function timestampCreate(){
@@ -68,7 +66,7 @@ abstract class Model extends Barebones\Schema{
 	}
 
 	private function load($id){
-		$db = Barebones\ApplicationDataConnectionPool::get($this->connection);
+		$db = ApplicationDataConnectionPool::get($this->connection);
 		$sql = "SELECT * FROM `".$this->db."`.`".$this->table."` WHERE `".$this->pri."` = '".$id."' LIMIT 1;";
 		$res = $db->query($sql);
 		if( $db->get_error() != "" )
@@ -111,6 +109,7 @@ abstract class Model extends Barebones\Schema{
 		return $attr;
 	}
 	public function save(){
+        try{
 		if( $this->_validate() ){
 			if($this->validId($this->id)){
 				$this->update();
@@ -118,12 +117,19 @@ abstract class Model extends Barebones\Schema{
 				$this->insert();
 			}
 		}
+        } catch(Exception $e){
+            throw new Exception($e->getMessage());
+        }
+	}
+
+	public function getColumns(){
+		return $this->attributeKeys;
 	}
 
 	private function update(){
 		if( !$this->loaded )
 			throw new Exception(get_class($this)." Failed to update: Model not Loaded");
-		$db = Barebones\ApplicationDataConnectionPool::get($this->connection);
+		$db = ApplicationDataConnectionPool::get($this->connection);
 		$update = array();
 		foreach($this->attributes as $key => $arr)
 		{
@@ -144,7 +150,7 @@ abstract class Model extends Barebones\Schema{
 		}
 	}
 	private function insert(){
-		$db = Barebones\ApplicationDataConnectionPool::get($this->connection);
+		$db = ApplicationDataConnectionPool::get($this->connection);
         $changes = $this->whatChanged();
         if( isset($changes[$this->pri]) )
             unset($changes[$this->pri]);
@@ -161,7 +167,6 @@ abstract class Model extends Barebones\Schema{
 			$res = $db->query($sql);
 			if( $db->get_error() != "" )
 				throw new Exception(get_class($this)." Failed to insert: ".$db->get_error()."".$sql);
-
 			$select_back = "SELECT `".$this->pri."` FROM `".$this->db."`.`".$this->table."` WHERE ";
 			foreach( $changes as $key => $val )
 			{
@@ -170,12 +175,15 @@ abstract class Model extends Barebones\Schema{
 			$select_back = substr($select_back,0,-4)." ORDER BY `".$this->pri."` DESC LIMIT 1;";
 			$res = $db->query($select_back);
 			if( $db->get_error() != "" )
-					throw new Exception(get_class($this)." Failed to select back: ".$db->get_error()."".$select_back);
-			while($res->hasNext()){
+				throw new Exception(get_class($this)." Failed to select back: ".$db->get_error()."".$select_back);
+			if($res->hasNext()){
 					$row = $res->next();
 					$this->attributes[$this->pri] = array($this->_getValue($this->pri,$row[$this->pri]),0);
+                    $this->id = $row[$this->pri];
+			} else {
+				throw new Exception(get_class($this)." Failed to select back: Submitted changes did not much what was recorded into the database. Be sure that what you've input has not been altered by database rules.");
 			}
-			$this->loaded;
+			$this->loaded = true;
 		}
 	}
 	public function delete(){
@@ -187,7 +195,7 @@ abstract class Model extends Barebones\Schema{
 			$this->update();
 		}
 		else{
-			$db = Barebones\ApplicationDataConnectionPool::get($this->connection);
+			$db = ApplicationDataConnectionPool::get($this->connection);
 			$sql = "DELETE FROM `".$this->db."`.`".$this->table."`  WHERE `".$this->pri."` = '".$this->id."' LIMIT 1;";
 			$res = $db->query($sql);
 			if( $db->get_error() != "" )
@@ -206,6 +214,24 @@ abstract class Model extends Barebones\Schema{
 			$this->rules[$field] = array_merge_recursive($this->rules[$field],$rules);
 		 else
 			$this->rules[$field] = $rules;
+	}
+
+	/**
+	 * Allows for a list of blacklisted keys that are immutable
+	 * @param Array $keys List of keys to be blacklisted
+	 */
+	public function setBlacklistKeys($keys){
+		foreach($keys as $key){
+			$this->blacklistKeys[] = $key;
+		}
+	}
+	/**
+	 * Allows for verifying that the key passed in is a valid attribute key of the model
+	 * @param  String  $key Attribute name
+	 * @return Boolean  true of false depending on evalutated result
+	 */
+	public function isModelAttribute($key){
+		return in_array($key, $this->attributeKeys);
 	}
 	private function _validate(){
 		foreach($this->attributes as $key => $arr){
@@ -229,7 +255,7 @@ abstract class Model extends Barebones\Schema{
 					if( !$this->$rule($this->$field) ){
 						throw new Exception(get_class($this)." Failed to validate user defined rule: ".$rule." is not true for ".$key." = ".$this->$field.";" );
 					}
-				}				
+				}
 				else if( function_exists($rule) ){
 					if( !$rule($this->$field) ){
 						print_r($this->class_methods);
@@ -262,8 +288,24 @@ abstract class Model extends Barebones\Schema{
 			return $this->$key;
 	}
 	public function __set($key,$val){
-		if( $key != $this->primary_key )
+		if(in_array($key, $this->blacklistKeys)){
+			throw new Exception("Attempting to set the value of a blacklisted key");
+		}else if($key != $this->primary_key){
 			$this->attributes[$key] = array($val,1);
+		}
+	}
+	/**
+	 * [set Pass an array of attributes to set in the model. Filters through and finds permissable attributes]
+	 * @param  [Array] $attr [description]
+	 * @return [Array] $options [description]
+	 */
+	public function set($attr){
+		$allowed_attr = $this->attributeKeys;
+		foreach($attr as $col => $val){
+			if(in_array($col, $allowed_attr)){
+				$this->__set($col, $val);
+			}
+		}
 	}
 	public function __isset($key){
 		return isset($this->attributes[$key]);
@@ -280,14 +322,18 @@ abstract class Model extends Barebones\Schema{
 	}
 	protected function is_integer($val){
 		// Warning this only matched positive intergers
-		return true;
-		return preg_match('/^[0-9]{1,}$/',$val);
+		// Don't do this.
+		// return true;
+		return preg_match('/^(-|){0,1}[0-9]{1,}$/',$val);
 	}
 	protected function is_required($val){
 		return !empty($val);
 	}
 	protected function is_currency($val){
 		return preg_match('/^\d+\.\d\d$/',$val);;
-	}	
+	}
+	protected function isDatabaseDate($value){
+		return ( preg_match('/^[0-9]{8}$/', $value) && checkdate(substr($value,4,2), substr($value,6,2), substr($value,0,4)) );
+	}
 }
 ?>

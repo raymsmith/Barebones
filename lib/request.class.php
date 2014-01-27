@@ -1,8 +1,10 @@
 <?php
-namespace BarebonesPHP;
+namespace Barebones\Lib;
 class Request{
 
 	public static $data = array();
+	public static $ahis;
+	public static $rt_socket;
 	public static $request_uri;
 	public static $uri_segments;
 	public static $isValid = false;
@@ -31,11 +33,14 @@ class Request{
 	}
 
 	private static function validate(){
-		if(empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] == 'off'){
+		/*if(empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] == 'off'){
 			self::sendError("No SSL connection detected. Please use HTTPS.");
+		}else if(!isset(self::$ahis)){
+			self::sendError("Session Info missing");
 		}else{
 			self::$isValid = true;
-		}
+		}*/
+		self::$isValid = true;
 	}
 
 
@@ -43,24 +48,36 @@ class Request{
 	private static function setRequestData(){
 
 		self::$requestMethod = $_SERVER['REQUEST_METHOD'];
-
+		
+		if(array_search($_SERVER['REQUEST_METHOD'], array(0=>'GET', 1=>'POST', 2=>'PUT', 3=>'DELETE')) < 0)
+			return self::sendError("Request Type Info Missing" . php_uname('n'));
 		switch($_SERVER['REQUEST_METHOD']){
 
 			case "GET":
 				self::$data = $_GET;
+				//self::$data['id'] = end(self::$uri_segments);
+				// self::$ahis = self::$data['ahis'];
 				break;
 			case "POST":
+				//self::$data = json_decode(file_get_contents("php://input"), true);
 				self::$data = $_POST;
+				//self::$data['id'] = (int)end(self::$uri_segments);
+				// self::$ahis = self::$data['ahis'];
+
 				break;
 			case "PUT":
+				// var_dump(json_decode(file_get_contents("php://input"), true));
 				self::$data = json_decode(file_get_contents("php://input"), true);
+				// self::$ahis = self::$data['ahis'];
 				break;
 			case "DELETE":
 				self::$data = $_GET; // Need to see where the data for a DELETE comes from
+				// self::$ahis = self::$data['ahis'];
 				break;
-			default:
-				$this->sendError("Request Type Info Missing" . php_uname('n'));
 		}
+		/*self::$ahis = self::$data['ahis'];
+		if(isset(self::$data['rt_socket']))
+			self::$rt_socket = self::$data['rt_socket'];*/
 	}
 
 	public static function getUrlData($path){
@@ -71,6 +88,7 @@ class Request{
 				self::$data[substr($variable,1)] = self::$uri_segments[$i];
 			}
 		}
+		//die("Got it! <br />".$path."<br />".self::$request_uri."<br />".var_dump(self::$data));
 	}
 
 	private static function setRequestURI(){

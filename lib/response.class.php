@@ -1,5 +1,5 @@
 <?php
-namespace BarebonesPHP;
+namespace Barebones\Lib;
 class Response{
 	protected static $body = array();
     protected static $sendHeaders = true;
